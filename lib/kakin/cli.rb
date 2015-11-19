@@ -2,7 +2,7 @@ require 'date'
 require 'yaml'
 require 'json'
 require 'net/http'
-require 'fog'
+require 'yao'
 require 'thor'
 
 module Kakin
@@ -31,7 +31,7 @@ module Kakin
       res = Net::HTTP.start(url.host, url.port) {|http|
         http.request(req)
       }
-      
+
       if res.code != "200"
         raise "usage data fatch is failed"
       else
@@ -62,7 +62,18 @@ module Kakin
 
         puts YAML.dump(result)
       end
-      
+    end
+
+    private
+
+    def setup
+      yaml = YAML.load_file(File.expand_path('~/.kaname'))
+      Yao.configure do
+        auth_url yaml['auth_url']
+        tenant_name yaml['tenant']
+        username yaml['username']
+        password yaml['password']
+      end
     end
   end
 end
