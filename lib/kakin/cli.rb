@@ -35,7 +35,7 @@ module Kakin
       else
         result = Hash.new
         JSON.load(res.body)["tenant_usages"].each do |usage|
-          tenant = Yao::Tenant.list.find{|t| t.id == usage["tenant_id"]} # XXX
+          tenant = Yao::Tenant.get(usage["tenant_id"]}
 
           total_vcpus_usage     = usage["total_vcpus_usage"]
           total_memory_mb_usage = usage["total_memory_mb_usage"]
