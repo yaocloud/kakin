@@ -1,4 +1,4 @@
 source 'https://rubygems.org'
 
-gem 'fog'
+gem 'yao'
 gem 'thor'

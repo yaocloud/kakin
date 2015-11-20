@@ -2,7 +2,7 @@ require 'date'
 require 'yaml'
 require 'json'
 require 'net/http'
-require 'fog'
+require 'yao'
 require 'thor'
 
 module Kakin
@@ -14,31 +14,28 @@ module Kakin
     option :e, type: :string, banner: "<end>", desc: "end time", default: Time.now.strftime("%Y-%m-01")
     desc 'calc', 'Calculate the cost'
     def calc
+      setup
+
       cost = YAML.load_file(options[:f])
       start_time = Time.parse(options[:s]).strftime("%FT%T")
       end_time = Time.parse(options[:e]).strftime("%FT%T")
 
       STDERR.puts "Start: #{start_time}"
       STDERR.puts "End:   #{end_time}"
-
-      credentials = Fog::Identity[:openstack].credentials
-      endpoint = "http://#{URI(credentials[:openstack_management_url]).hostname}:8774"
-      url = URI.parse("#{endpoint}/v2/#{credentials[:current_tenant]["id"]}/os-simple-tenant-usage?start=#{start_time}&end=#{end_time}")
-
+      url = URI.parse("#{@@management_url}/#{Yao::Tenant.get_by_name(@@tenant).id}/os-simple-tenant-usage?start=#{start_time}&end=#{end_time}")
       req = Net::HTTP::Get.new(url)
       req["Accept"] = "application/json"
-      req["X-Auth-Token"] = credentials[:openstack_auth_token]
+      req["X-Auth-Token"] = Yao::Auth.try_new.token
       res = Net::HTTP.start(url.host, url.port) {|http|
         http.request(req)
       }
-      
+
       if res.code != "200"
         raise "usage data fatch is failed"
       else
         result = Hash.new
         JSON.load(res.body)["tenant_usages"].each do |usage|
-          tenant = Fog::Identity[:openstack].get_tenants_by_id(usage["tenant_id"])
-          tenant_name = tenant.body["tenant"]["name"]
+          tenant = Yao::Tenant.get(usage["tenant_id"]}
 
           total_vcpus_usage     = usage["total_vcpus_usage"]
           total_memory_mb_usage = usage["total_memory_mb_usage"]
@@ -48,7 +45,7 @@ module Kakin
           bill_memory = total_memory_mb_usage * cost["memory_mb_per_hour"]
           bill_disk   = total_local_gb_usage * cost["disk_gb_per_hour"]
 
-          result[tenant_name] = {
+          result[tenant.name] = {
             'bill_total'            => bill_vcpu + bill_memory + bill_disk,
             'bill_vcpu'             => bill_vcpu,
             'bill_memory'           => bill_memory,
@@ -62,7 +59,22 @@ module Kakin
 
         puts YAML.dump(result)
       end
-      
+    end
+
+    private
+
+    def setup
+      yaml = YAML.load_file(File.expand_path('~/.kakin'))
+
+      @@management_url = yaml['management_url']
+      @@tenant = yaml['tenant']
+
+      Yao.configure do
+        auth_url yaml['auth_url']
+        tenant_name yaml['tenant']
+        username yaml['username']
+        password yaml['password']
+      end
     end
   end
 end
