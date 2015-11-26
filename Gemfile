@@ -1,4 +1,4 @@
 source 'https://rubygems.org'
 
-gem 'yao'
-gem 'thor'
+# Specify your gem's dependencies in kakin.gemspec
+gemspec
