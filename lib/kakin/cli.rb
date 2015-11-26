@@ -14,7 +14,7 @@ module Kakin
     option :e, type: :string, banner: "<end>", desc: "end time", default: Time.now.strftime("%Y-%m-01")
     desc 'calc', 'Calculate the cost'
     def calc
-      setup
+      Kakin::Configuration.setup
 
       cost = YAML.load_file(options[:f])
       start_time = Time.parse(options[:s]).strftime("%FT%T")
@@ -22,7 +22,7 @@ module Kakin
 
       STDERR.puts "Start: #{start_time}"
       STDERR.puts "End:   #{end_time}"
-      url = URI.parse("#{@@management_url}/#{Yao::Tenant.get_by_name(@@tenant).id}/os-simple-tenant-usage?start=#{start_time}&end=#{end_time}")
+      url = URI.parse("#{Kakin::Configuration.management_url}/#{Yao::Tenant.get_by_name(Kakin::Configuration.tenant).id}/os-simple-tenant-usage?start=#{start_time}&end=#{end_time}")
       req = Net::HTTP::Get.new(url)
       req["Accept"] = "application/json"
       req["X-Auth-Token"] = Yao::Auth.try_new.token
@@ -58,22 +58,6 @@ module Kakin
         end
 
         puts YAML.dump(result)
-      end
-    end
-
-    private
-
-    def setup
-      yaml = YAML.load_file(File.expand_path('~/.kakin'))
-
-      @@management_url = yaml['management_url']
-      @@tenant = yaml['tenant']
-
-      Yao.configure do
-        auth_url yaml['auth_url']
-        tenant_name yaml['tenant']
-        username yaml['username']
-        password yaml['password']
       end
     end
   end
