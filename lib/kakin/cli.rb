@@ -37,11 +37,15 @@ module Kakin
         JSON.load(res.body)["tenant_usages"].each do |usage|
           tenant = Yao::Tenant.get(usage["tenant_id"])
 
-          incomings = tenant.servers.old_samples(counter_name: 'network.incoming.bytes', query: {'q.field': 'timestamp', 'q.op': 'gt', 'q.value': start_time.iso8601})
-          total_incoming_usage = incomings.sort_by(&:timestamp).find{|s| Time.parse(s.timetamp) > end_date }[-1] - incomings[-1]
+          total_incoming_usage = tenant.servers.inject(0) do |server, t|
+            incomings = server.old_samples(counter_name: 'network.incoming.bytes', query: {'q.field': 'timestamp', 'q.op': 'gt', 'q.value': start_time.iso8601})
+            t + (incomings.sort_by(&:timestamp).find{|s| Time.parse(s.timetamp) > end_date }[-1] - incomings[-1])
+          end
 
-          outgoings = tenant.servers.old_samples(counter_name: 'network.outgoing.bytes', query: {'q.field': 'timestamp', 'q.op': 'gt', 'q.value': start_time.iso8601})
-          total_outgoing_usage = outgoings.sort_by(&:timestamp).find{|s| Time.parse(s.timetamp) > end_date }[-1] - outgoings[-1]
+          total_outgoing_usage = tenant.servers.inject(0) do |server, t|
+            outgoings = server.old_samples(counter_name: 'network.outgoing.bytes', query: {'q.field': 'timestamp', 'q.op': 'gt', 'q.value': start_time.iso8601})
+            t + (outgoings.sort_by(&:timestamp).find{|s| Time.parse(s.timetamp) > end_date }[-1] - outgoings[-1])
+          end
 
           total_vcpus_usage     = usage["total_vcpus_usage"]
           total_memory_mb_usage = usage["total_memory_mb_usage"]
