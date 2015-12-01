@@ -3,7 +3,7 @@ PATH
   specs:
     kakin (0.0.1)
       thor
-      yao (~> 0.2.3)
+      yao (~> 0.2.4)
 
 GEM
   remote: https://rubygems.org/
@@ -17,7 +17,7 @@ GEM
     multipart-post (2.0.0)
     rake (10.4.2)
     thor (0.19.1)
-    yao (0.2.3)
+    yao (0.2.4)
       faraday
       faraday_middleware
       json
