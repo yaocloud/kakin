@@ -3,8 +3,8 @@ require 'yaml'
 require 'json'
 require 'net/http'
 require 'yao'
-require 'yao/resources/tenant'
 require 'kakin/yao_ext/tenant'
+require 'kakin/yao_ext/server'
 require 'thor'
 
 module Kakin
@@ -18,7 +18,7 @@ module Kakin
     def calc
       Kakin::Configuration.setup
 
-      cost = YAML.load_file(options[:f])
+      yaml = YAML.load_file(options[:f])
       start_time = Time.parse(options[:s]).strftime("%FT%T")
       end_time = Time.parse(options[:e]).strftime("%FT%T")
 
@@ -39,16 +39,16 @@ module Kakin
         JSON.load(res.body)["tenant_usages"].each do |usage|
           tenant = Yao::Tenant.get(usage["tenant_id"])
 
-          total_incoming_usage = tenant.network_usage(:incoming, start_time, end_time)
-          total_outgoing_usage = tenant.network_usage(:outgoing, start_time, end_time)
+          total_incoming_usage = tenant.network_usage(Regexp.new(yaml["ip_regexp"]), :incoming, start_time, end_time)
+          total_outgoing_usage = tenant.network_usage(Regexp.new(yaml["ip_regexp"]), :outgoing, start_time, end_time)
 
           total_vcpus_usage     = usage["total_vcpus_usage"]
           total_memory_mb_usage = usage["total_memory_mb_usage"]
           total_local_gb_usage  = usage["total_local_gb_usage"]
 
-          bill_vcpu   = total_vcpus_usage * cost["vcpu_per_hour"]
-          bill_memory = total_memory_mb_usage * cost["memory_mb_per_hour"]
-          bill_disk   = total_local_gb_usage * cost["disk_gb_per_hour"]
+          bill_vcpu   = total_vcpus_usage * yaml["vcpu_per_hour"]
+          bill_memory = total_memory_mb_usage * yaml["memory_mb_per_hour"]
+          bill_disk   = total_local_gb_usage * yaml["disk_gb_per_hour"]
 
           result[tenant.name] = {
             'bill_total'            => bill_vcpu + bill_memory + bill_disk,

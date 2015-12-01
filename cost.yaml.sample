@@ -1,3 +1,4 @@
 vcpu_per_hour: 1
 memory_mb_per_hour: 0.0009765625
 disk_gb_per_hour: 1
+ip_regexp: ^192.128
