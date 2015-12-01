@@ -1,6 +1,6 @@
 GIT
   remote: git://github.com/yaocloud/yao.git
-  revision: 2c575829e3b5941f77224563f3117ffce5dfe641
+  revision: 791e7d704aa585d5c385d66c6b5d0521a8e8efa9
   specs:
     yao (0.2.4)
       faraday
