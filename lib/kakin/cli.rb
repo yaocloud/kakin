@@ -37,25 +37,8 @@ module Kakin
         JSON.load(res.body)["tenant_usages"].each do |usage|
           tenant = Yao::Tenant.get(usage["tenant_id"])
 
-          total_incoming_usage = tenant.servers.inject(0) do |server, t|
-            incomings = server.old_samples(counter_name: 'network.incoming.bytes', query: {'q.field': 'timestamp', 'q.op': 'gt', 'q.value': start_time.iso8601}).sort_by(&:timestamp)
-            last_incoming_index = incomings.find{|s| s.timestamp > end_time }
-            if last_incoming_index
-              t + (incomings[last_incoming_index].counter_volume - incomings[0].counter_volume)
-            else
-              t + (incomings[-1].counter_volume - incomings[0].counter_volume)
-            end
-          end
-
-          total_outgoing_usage = tenant.servers.inject(0) do |server, t|
-            outgoings = server.old_samples(counter_name: 'network.outgoing.bytes', query: {'q.field': 'timestamp', 'q.op': 'gt', 'q.value': start_time.iso8601})
-            last_outgoing_index = outgoings.find{|s| s.timestamp > end_time }
-            if last_outgoing_index
-              t + (outgoings[last_outgoing_index].counter_volume - outgoings[0].counter_volume)
-            else
-              t + (outgoings[-1].counter_volume - outgoings[0].counter_volume)
-            end
-          end
+          total_incoming_usage = network_usage(:incoming, start_time, end_time)
+          total_outgoing_usage = network_usage(:outgoing, start_time, end_time)
 
           total_vcpus_usage     = usage["total_vcpus_usage"]
           total_memory_mb_usage = usage["total_memory_mb_usage"]
@@ -80,6 +63,20 @@ module Kakin
         end
 
         puts YAML.dump(result)
+      end
+    end
+
+    private
+
+    def network_usage(type, start_time, end_time)
+      tenant.servers.inject(0) do |server, t|
+        samples = server.old_samples(counter_name: "network.#{type}.bytes", query: {'q.field': 'timestamp', 'q.op': 'gt', 'q.value': start_time.iso8601}).sort_by(&:timestamp)
+        last_sample_index = samples.find{|s| s.timestamp > end_time }
+        if last_sample_index
+          t + (samples[last_sample_index].counter_volume - samples[0].counter_volume)
+        else
+          t + (samples[-1].counter_volume - samples[0].counter_volume)
+        end
       end
     end
   end
