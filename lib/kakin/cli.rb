@@ -38,13 +38,23 @@ module Kakin
           tenant = Yao::Tenant.get(usage["tenant_id"])
 
           total_incoming_usage = tenant.servers.inject(0) do |server, t|
-            incomings = server.old_samples(counter_name: 'network.incoming.bytes', query: {'q.field': 'timestamp', 'q.op': 'gt', 'q.value': start_time.iso8601})
-            t + (incomings.sort_by(&:timestamp).find{|s| Time.parse(s.timetamp) > end_date }[-1] - incomings[-1])
+            incomings = server.old_samples(counter_name: 'network.incoming.bytes', query: {'q.field': 'timestamp', 'q.op': 'gt', 'q.value': start_time.iso8601}).sort_by(&:timestamp)
+            last_incoming_index = incomings.find{|s| s.timestamp > end_time }
+            if last_incoming_index
+              t + (incomings[last_incoming_index].counter_volume - incomings[0].counter_volume)
+            else
+              t + (incomings[-1].counter_volume - incomings[0].counter_volume)
+            end
           end
 
           total_outgoing_usage = tenant.servers.inject(0) do |server, t|
             outgoings = server.old_samples(counter_name: 'network.outgoing.bytes', query: {'q.field': 'timestamp', 'q.op': 'gt', 'q.value': start_time.iso8601})
-            t + (outgoings.sort_by(&:timestamp).find{|s| Time.parse(s.timetamp) > end_date }[-1] - outgoings[-1])
+            last_outgoing_index = outgoings.find{|s| s.timestamp > end_time }
+            if last_outgoing_index
+              t + (outgoings[last_outgoing_index].counter_volume - outgoings[0].counter_volume)
+            else
+              t + (outgoings[-1].counter_volume - outgoings[0].counter_volume)
+            end
           end
 
           total_vcpus_usage     = usage["total_vcpus_usage"]
