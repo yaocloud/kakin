@@ -66,13 +66,6 @@ module Kakin
           }
         end
 
-        total_network_usage = result.inject(0) do |s, v|
-          s + (v[1]["total_incoming_usage"] + v[1]["total_outgoing_usage"])
-        end
-        tenants.each do |t|
-          result[t]["network_usage_ratio"] = (result[t]["total_incoming_usage"] + result[t]["total_outgoing_usage"]) / total_network_usage
-        end
-
         puts YAML.dump(result)
       end
     end
