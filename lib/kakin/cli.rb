@@ -63,6 +63,7 @@ module Kakin
             'total_local_gb_usage'  => total_local_gb_usage,
             'total_incoming_usage'  => total_incoming_usage,
             'total_outgoing_usage'  => total_outgoing_usage,
+            'average_network_usage' => ((total_incoming_usage + total_incoming_usage) * 8)/(end_time.to_i - start_time.to_i)
           }
         end
 
