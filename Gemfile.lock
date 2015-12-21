@@ -1,17 +1,9 @@
-GIT
-  remote: git://github.com/yaocloud/yao.git
-  revision: 791e7d704aa585d5c385d66c6b5d0521a8e8efa9
-  specs:
-    yao (0.2.4)
-      faraday
-      faraday_middleware
-      json
-
 PATH
   remote: .
   specs:
     kakin (0.0.1)
       thor
+      yao (~> 0.2.5)
 
 GEM
   remote: https://rubygems.org/
@@ -25,6 +17,10 @@ GEM
     multipart-post (2.0.0)
     rake (10.4.2)
     thor (0.19.1)
+    yao (0.2.7)
+      faraday
+      faraday_middleware
+      json
 
 PLATFORMS
   ruby
@@ -34,7 +30,6 @@ DEPENDENCIES
   kakin!
   minitest
   rake (~> 10.0)
-  yao!
 
 BUNDLED WITH
-   1.10.6
+   1.11.2
