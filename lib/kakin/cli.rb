@@ -85,9 +85,6 @@ module Kakin
         total_incoming_usage = tenant.network_usage(Regexp.new(yaml["ip_regexp"]), :incoming, start_time.iso8601, end_time.iso8601)
         total_outgoing_usage = tenant.network_usage(Regexp.new(yaml["ip_regexp"]), :outgoing, start_time.iso8601, end_time.iso8601)
 
-        puts start_time.to_i
-        puts end_time.to_i
-
         result[tenant.name] = {
           'total_incoming_usage'  => total_incoming_usage,
           'total_outgoing_usage'  => total_outgoing_usage,
