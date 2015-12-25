@@ -41,9 +41,6 @@ module Kakin
           tenant = Yao::Tenant.get(usage["tenant_id"])
           tenants << tenant.name
 
-          total_incoming_usage = tenant.network_usage(Regexp.new(yaml["ip_regexp"]), :incoming, start_time, end_time)
-          total_outgoing_usage = tenant.network_usage(Regexp.new(yaml["ip_regexp"]), :outgoing, start_time, end_time)
-
           total_vcpus_usage     = usage["total_vcpus_usage"]
           total_memory_mb_usage = usage["total_memory_mb_usage"]
           total_local_gb_usage  = usage["total_local_gb_usage"]
@@ -61,14 +58,44 @@ module Kakin
             'total_vcpus_usage'     => total_vcpus_usage,
             'total_memory_mb_usage' => total_memory_mb_usage,
             'total_local_gb_usage'  => total_local_gb_usage,
-            'total_incoming_usage'  => total_incoming_usage,
-            'total_outgoing_usage'  => total_outgoing_usage,
-            'average_network_usage' => ((total_incoming_usage + total_incoming_usage) * 8)/(end_time.to_i - start_time.to_i)
           }
         end
 
         puts YAML.dump(result)
       end
+    end
+
+    option :f, type: :string, banner: "<file>", desc: "cost define file(yaml)", required: true
+    option :s, type: :string, banner: "<start>", desc: "start time", default: (DateTime.now << 1).strftime("%Y-%m-01")
+    option :e, type: :string, banner: "<end>", desc: "end time", default: Time.now.strftime("%Y-%m-01")
+    desc 'network', 'network resource'
+    def network
+      Kakin::Configuration.setup
+
+      yaml = YAML.load_file(options[:f])
+      start_time = Time.parse(options[:s])
+      end_time = Time.parse(options[:e])
+
+      STDERR.puts "Start: #{start_time}"
+      STDERR.puts "End:   #{end_time}"
+
+      result = Hash.new
+      tenants = Yao::Tenant.list
+      tenants.each do |tenant|
+        total_incoming_usage = tenant.network_usage(Regexp.new(yaml["ip_regexp"]), :incoming, start_time.iso8601, end_time.iso8601)
+        total_outgoing_usage = tenant.network_usage(Regexp.new(yaml["ip_regexp"]), :outgoing, start_time.iso8601, end_time.iso8601)
+
+        puts start_time.to_i
+        puts end_time.to_i
+
+        result[tenant.name] = {
+          'total_incoming_usage'  => total_incoming_usage,
+          'total_outgoing_usage'  => total_outgoing_usage,
+          'average_network_usage' => ((total_incoming_usage + total_incoming_usage) * 8)/(end_time.to_i - start_time.to_i)
+        }
+      end
+
+      puts YAML.dump(result)
     end
   end
 end
