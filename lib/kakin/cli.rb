@@ -82,13 +82,9 @@ module Kakin
       result = Hash.new
       tenants = Yao::Tenant.list
       tenants.each do |tenant|
-        total_incoming_usage = tenant.network_usage(Regexp.new(yaml["ip_regexp"]), :incoming, start_time.iso8601, end_time.iso8601)
-        total_outgoing_usage = tenant.network_usage(Regexp.new(yaml["ip_regexp"]), :outgoing, start_time.iso8601, end_time.iso8601)
-
         result[tenant.name] = {
-          'total_incoming_usage'  => total_incoming_usage,
-          'total_outgoing_usage'  => total_outgoing_usage,
-          'average_network_usage' => ((total_incoming_usage + total_incoming_usage) * 8)/(end_time.to_i - start_time.to_i)
+          'incoming_usage'  => tenant.network_usage(Regexp.new(yaml["ip_regexp"]), :incoming, start_time.iso8601, end_time.iso8601),
+          'outgoing_usage'  => tenant.network_usage(Regexp.new(yaml["ip_regexp"]), :outgoing, start_time.iso8601, end_time.iso8601)
         }
       end
 
