@@ -9,7 +9,7 @@ module Yao::Resources
           t
         else
           wan_samples = samples.select{|s| s.resource_metadata["mac"] == server.mac_address(ip_regexp) }.sort_by(&:timestamp)
-          if wan_samples.empty?
+          if wan_samples.empty? || (wan_samples.size == 1)
             t
           else
             last_sample_index = wan_samples.find_index{|s| s.timestamp > Time.parse(end_time) }
