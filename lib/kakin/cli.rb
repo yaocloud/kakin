@@ -82,7 +82,7 @@ module Kakin
       result = Hash.new
       tenants = Yao::Tenant.list
       tenants.each do |tenant|
-        incoming = tenant.network_usage(Regexp.new(yaml["ip_regexp"]), :incoming, start_time.iso8601, end_time.iso8601),
+        incoming = tenant.network_usage(Regexp.new(yaml["ip_regexp"]), :incoming, start_time.iso8601, end_time.iso8601)
         outgoing = tenant.network_usage(Regexp.new(yaml["ip_regexp"]), :outgoing, start_time.iso8601, end_time.iso8601)
         result[tenant.name] = {
           'incoming_usage'  => incoming,
