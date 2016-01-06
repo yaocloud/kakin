@@ -9,15 +9,18 @@ module Yao::Resources
           t
         else
           wan_samples = samples.select{|s| s.resource_metadata["mac"] == server.mac_address(ip_regexp) }.sort_by(&:timestamp)
-          if wan_samples.empty?
+          if wan_samples.empty? || (wan_samples.size == 1)
             t
           else
             last_sample_index = wan_samples.find_index{|s| s.timestamp > Time.parse(end_time) }
-            if last_sample_index
-              t + (wan_samples[last_sample_index].counter_volume - wan_samples[0].counter_volume)
-            else
-              t + (wan_samples[-1].counter_volume - wan_samples[0].counter_volume)
-            end
+            last_sample = if last_sample_index
+                            wan_samples[last_sample_index]
+                          else
+                            wan_samples[-1]
+                          end
+            transferred_bits = (last_sample.counter_volume - wan_samples[0].counter_volume) * 8.0
+            period = (last_sample.timestamp - wan_samples[0].timestamp).to_i
+            t + transferred_bits / period
           end
         end
       end
