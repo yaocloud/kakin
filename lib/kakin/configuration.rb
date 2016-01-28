@@ -20,6 +20,7 @@ module Kakin
         tenant_name yaml['tenant']
         username yaml['username']
         password yaml['password']
+        timeout yaml['timeout'] if yaml['timeout']
       end
     end
   end
