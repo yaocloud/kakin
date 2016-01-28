@@ -20,7 +20,13 @@ module Yao::Resources
                           end
             transferred_bits = (last_sample.counter_volume - wan_samples[0].counter_volume) * 8.0
             period = (last_sample.timestamp - wan_samples[0].timestamp).to_i
-            t + transferred_bits / period
+            # ignored negative number or zero period. Thease are unexpected data.
+            # We need to investigate why generate these counter.
+            if transferred_bits < 0 || period.zero?
+              t
+            else
+              t + transferred_bits / period
+            end
           end
         end
       end
