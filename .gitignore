@@ -1,4 +1,5 @@
 cost.yaml
+/Gemfile.lock
 *.gem
 *.rbc
 /.config
