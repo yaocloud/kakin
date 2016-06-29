@@ -93,5 +93,26 @@ module Kakin
 
       puts YAML.dump(result)
     end
+
+    option :f, type: :string, banner: "<file>", desc: "cost define file(yaml)", required: true
+    desc 'ip', 'ip use count'
+    def ip
+      Kakin::Configuration.setup
+
+      yaml = YAML.load_file(options[:f])
+      ip_regexp = Regexp.new(yaml["ip_regexp"])
+
+      result = Hash.new
+      tenants = Yao::Tenant.list
+      tenants.each do |tenant|
+        count = tenant.ports.select {|p| p.fixed_ips[0]["ip_address"] =~ ip_regexp}.count
+        result[tenant.name] = {
+          'count'       => count,
+          'total_usage' => count * yaml["cost_per_ip"],
+        }
+      end
+
+      puts YAML.dump(result)
+    end
   end
 end
