@@ -111,6 +111,7 @@ module Kakin
     end
 
     option :f, type: :string, banner: "<file>", desc: "cost define file(yaml)", required: true
+    option :t, type: :string, banner: "<tenant>", desc: "specify tenant", default: ""
     desc 'ip', 'ip use count'
     def ip
       Kakin::Configuration.setup
@@ -119,7 +120,13 @@ module Kakin
       ip_regexp = Regexp.new(yaml["ip_regexp"])
 
       result = Hash.new
-      tenants = Yao::Tenant.list
+      tenants = unless options[:t].empty?
+                  Yao::Tenant.list(name: options[:t])
+                else
+                  Yao::Tenant.list
+                end
+      tenants = [tenants] unless tenants.is_a?(Array)
+
       tenants.each do |tenant|
         count = tenant.ports.select {|p| p.fixed_ips[0]["ip_address"] =~ ip_regexp}.count
         result[tenant.name] = {
