@@ -68,6 +68,7 @@ module Kakin
     option :f, type: :string, banner: "<file>", desc: "cost define file(yaml)", required: true
     option :s, type: :string, banner: "<start>", desc: "start time", default: (DateTime.now << 1).strftime("%Y-%m-01")
     option :e, type: :string, banner: "<end>", desc: "end time", default: Time.now.strftime("%Y-%m-01")
+    option :t, type: :string, banner: "<tenant>", desc: "specify tenant", default: ""
     desc 'network', 'network resource'
     def network
       Kakin::Configuration.setup
@@ -80,7 +81,13 @@ module Kakin
       STDERR.puts "End:   #{end_time}"
 
       result = Hash.new
-      tenants = Yao::Tenant.list
+      tenants = unless options[:t].empty?
+                  Yao::Tenant.list(name: options[:t])
+                else
+                  Yao::Tenant.list
+                end
+      tenants = [tenants] unless tenants.is_a?(Array)
+
       tenants.each do |tenant|
         incoming = tenant.network_usage(Regexp.new(yaml["ip_regexp"]), :incoming, start_time.iso8601, end_time.iso8601)
         outgoing = tenant.network_usage(Regexp.new(yaml["ip_regexp"]), :outgoing, start_time.iso8601, end_time.iso8601)
