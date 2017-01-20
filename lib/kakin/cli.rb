@@ -14,6 +14,7 @@ module Kakin
     option :f, type: :string, banner: "<file>", desc: "cost define file(yaml)", required: true
     option :s, type: :string, banner: "<start>", desc: "start time", default: (DateTime.now << 1).strftime("%Y-%m-01")
     option :e, type: :string, banner: "<end>", desc: "end time", default: Time.now.strftime("%Y-%m-01")
+    option :t, type: :string, banner: "<tenant>", desc: "specify tenant", default: ""
     desc 'calc', 'Calculate the cost'
     def calc
       Kakin::Configuration.setup
@@ -36,10 +37,18 @@ module Kakin
         raise "usage data fatch is failed"
       else
         result = Hash.new
-        tenants = []
-        JSON.load(res.body)["tenant_usages"].each do |usage|
-          tenant = Yao::Tenant.get(usage["tenant_id"])
-          tenants << tenant.name
+        tenant_usages = JSON.load(res.body)["tenant_usages"]
+        tenants = Yao::Tenant.list
+
+        unless options[:t].empty?
+          tenant = tenants.find { |tenant| tenant.name == options[:t] }
+          raise "Not Found tenant #{options[:t]}" unless tenant
+
+          tenant_usages = tenant_usages.select { |tenant_usage| tenant_usage["tenant_id"] == tenant.id }
+        end
+
+        tenant_usages.each do |usage|
+          tenant = tenants.find { |tenant| tenant.id == usage["tenant_id"] }
 
           total_vcpus_usage     = usage["total_vcpus_usage"]
           total_memory_mb_usage = usage["total_memory_mb_usage"]
@@ -68,6 +77,7 @@ module Kakin
     option :f, type: :string, banner: "<file>", desc: "cost define file(yaml)", required: true
     option :s, type: :string, banner: "<start>", desc: "start time", default: (DateTime.now << 1).strftime("%Y-%m-01")
     option :e, type: :string, banner: "<end>", desc: "end time", default: Time.now.strftime("%Y-%m-01")
+    option :t, type: :string, banner: "<tenant>", desc: "specify tenant", default: ""
     desc 'network', 'network resource'
     def network
       Kakin::Configuration.setup
@@ -80,7 +90,13 @@ module Kakin
       STDERR.puts "End:   #{end_time}"
 
       result = Hash.new
-      tenants = Yao::Tenant.list
+      tenants = unless options[:t].empty?
+                  Yao::Tenant.list(name: options[:t])
+                else
+                  Yao::Tenant.list
+                end
+      tenants = [tenants] unless tenants.is_a?(Array)
+
       tenants.each do |tenant|
         incoming = tenant.network_usage(Regexp.new(yaml["ip_regexp"]), :incoming, start_time.iso8601, end_time.iso8601)
         outgoing = tenant.network_usage(Regexp.new(yaml["ip_regexp"]), :outgoing, start_time.iso8601, end_time.iso8601)
@@ -95,6 +111,7 @@ module Kakin
     end
 
     option :f, type: :string, banner: "<file>", desc: "cost define file(yaml)", required: true
+    option :t, type: :string, banner: "<tenant>", desc: "specify tenant", default: ""
     desc 'ip', 'ip use count'
     def ip
       Kakin::Configuration.setup
@@ -103,7 +120,13 @@ module Kakin
       ip_regexp = Regexp.new(yaml["ip_regexp"])
 
       result = Hash.new
-      tenants = Yao::Tenant.list
+      tenants = unless options[:t].empty?
+                  Yao::Tenant.list(name: options[:t])
+                else
+                  Yao::Tenant.list
+                end
+      tenants = [tenants] unless tenants.is_a?(Array)
+
       tenants.each do |tenant|
         count = tenant.ports.select {|p| p.fixed_ips[0]["ip_address"] =~ ip_regexp}.count
         result[tenant.name] = {
