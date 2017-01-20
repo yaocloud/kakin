@@ -7,7 +7,7 @@ Gem::Specification.new do |spec|
   spec.name          = "kakin"
   spec.version       = Kakin::VERSION
   spec.authors       = ["buty4649", "SHIBATA Hiroshi"]
-  spec.email         = ["hsbt@ruby-lang.org"]
+  spec.email         = ["", "hsbt@ruby-lang.org"]
 
   spec.summary       = %q{kakin is resource calcuration tool for OpenStack}
   spec.description   = %q{kakin is resource calcuration tool for OpenStack}
