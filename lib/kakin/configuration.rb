@@ -21,6 +21,8 @@ module Kakin
         username yaml['username']
         password yaml['password']
         timeout yaml['timeout'] if yaml['timeout']
+        client_cert yaml['client_cert'] if yaml['client_cert']
+        client_key yaml['client_key'] if yaml['client_key']
       end
     end
   end
