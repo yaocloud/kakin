@@ -139,5 +139,36 @@ module Kakin
 
       puts YAML.dump(result)
     end
+
+    option :f, type: :string, banner: "<file>", desc: "cost define file(yaml)", required: true
+    option :t, type: :string, banner: "<tenant>", desc: "specify tenant", default: ""
+    desc 'volume', 'volume usage'
+    def volume
+      Kakin::Configuration.setup
+      yaml = YAML.load_file(options[:f])
+
+      result = Hash.new
+      tenants = unless options[:t].empty?
+                  Yao::Tenant.list(name: options[:t])
+                else
+                  Yao::Tenant.list
+                end
+      tenants = [tenants] unless tenants.is_a?(Array)
+      volume_types = Yao::VolumeType.list
+      volumes = Yao::Volume.list_detail(all_tenants: true)
+
+      tenants.each do |tenant|
+        result[tenant.name] ||= {}
+        volume_types.each do |volume_type|
+          total = volumes.select { |volume| volume.tenant_id == tenant.id && volume.volume_type == volume_type.name }.map(&:size).sum
+          result[tenant.name][volume_type.name] = {
+              'total': total,
+              'total_usage': total * yaml['volume_cost_per_gb'][volume_type.name]
+          }
+        end
+      end
+
+      puts YAML.dump(result)
+    end
   end
 end

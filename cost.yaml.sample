@@ -3,3 +3,6 @@ memory_mb_per_hour: 0.0009765625
 disk_gb_per_hour: 1
 cost_per_ip: 1
 ip_regexp: ^192.128
+volume_cost_per_gb:
+  type_1: 1
+  type_2: 1.5
