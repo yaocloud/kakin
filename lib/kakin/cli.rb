@@ -160,10 +160,10 @@ module Kakin
       tenants.each do |tenant|
         result[tenant.name] ||= {}
         volume_types.each do |volume_type|
-          total = volumes.select { |volume| volume.tenant_id == tenant.id && volume.volume_type == volume_type.name }.map(&:size).sum
+          count = volumes.select { |volume| volume.tenant_id == tenant.id && volume.volume_type == volume_type.name }.map(&:size).sum
           result[tenant.name][volume_type.name] = {
-              'total': total,
-              'total_usage': total * yaml['volume_cost_per_gb'][volume_type.name]
+              'count': count,
+              'total_usage': count * yaml['volume_cost_per_gb'][volume_type.name]
           }
         end
       end
