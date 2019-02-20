@@ -11,14 +11,17 @@ module Kakin
 
     def self.setup
       config = {
-        'auth_url'       => ENV['OS_AUTH_URL'],
-        'tenant'         => ENV['OS_TENANT_NAME'] || ENV['OS_PROJECT_NAME'],
-        'username'       => ENV['OS_USERNAME'],
-        'password'       => ENV['OS_PASSWORD'],
-        'client_cert'    => ENV['OS_CERT'],
-        'client_key'     => ENV['OS_KEY'],
-        'timeout'        => ENV['YAO_TIMEOUT'],
-        'management_url' => ENV['YAO_MANAGEMENT_URL'],
+        'auth_url'             => ENV['OS_AUTH_URL'],
+        'tenant'               => ENV['OS_TENANT_NAME'] || ENV['OS_PROJECT_NAME'],
+        'username'             => ENV['OS_USERNAME'],
+        'password'             => ENV['OS_PASSWORD'],
+        'client_cert'          => ENV['OS_CERT'],
+        'client_key'           => ENV['OS_KEY'],
+        'identity_api_version' => ENV['OS_IDENTITY_API_VERSION'],
+        'user_domain_name'     => ENV['OS_USER_DOMAIN_NAME'],
+        'project_domain_name'  => ENV['OS_PROJECT_DOMAIN_NAME'],
+        'timeout'              => ENV['YAO_TIMEOUT'],
+        'management_url'       => ENV['YAO_MANAGEMENT_URL'],
       }
 
       file_path = File.expand_path('~/.kakin')
@@ -38,6 +41,9 @@ module Kakin
         timeout config['timeout'] if config['timeout']
         client_cert config['client_cert'] if config['client_cert']
         client_key config['client_key'] if config['client_key']
+        identity_api_version config['identity_api_version'] if config['identity_api_version']
+        user_domain_name config['user_domain_name'] if config['user_domain_name']
+        project_domain_name config['project_domain_name'] if config['project_domain_name']
       end
     end
   end
