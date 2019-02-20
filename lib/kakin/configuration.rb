@@ -22,6 +22,7 @@ module Kakin
         'project_domain_name'  => ENV['OS_PROJECT_DOMAIN_NAME'],
         'timeout'              => ENV['YAO_TIMEOUT'],
         'management_url'       => ENV['YAO_MANAGEMENT_URL'],
+        'debug'                => ENV['YAO_DEBUG'] || false,
       }
 
       file_path = File.expand_path('~/.kakin')
@@ -44,6 +45,7 @@ module Kakin
         identity_api_version config['identity_api_version'] if config['identity_api_version']
         user_domain_name config['user_domain_name'] if config['user_domain_name']
         project_domain_name config['project_domain_name'] if config['project_domain_name']
+        debug config['debug']
       end
     end
   end
