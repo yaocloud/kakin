@@ -1,10 +1,6 @@
 module Kakin
   class Configuration
 
-    def self.management_url
-      @@_management_url
-    end
-
     def self.tenant
       @@_tenant
     end
@@ -31,7 +27,6 @@ module Kakin
         config.merge!(yaml)
       end
 
-      @@_management_url = config['management_url']
       @@_tenant = config['tenant']
 
       Yao.configure do

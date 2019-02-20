@@ -26,19 +26,17 @@ module Kakin
 
       STDERR.puts "Start: #{start_time}"
       STDERR.puts "End:   #{end_time}"
-      url = URI.parse("#{Kakin::Configuration.management_url}/#{Yao::Tenant.get_by_name(Kakin::Configuration.tenant).id}/os-simple-tenant-usage?start=#{start_time}&end=#{end_time}")
-      req = Net::HTTP::Get.new(url)
-      req["Accept"] = "application/json"
-      req["X-Auth-Token"] = Yao::Auth.try_new.token
-      res = Net::HTTP.start(url.host, url.port) {|http|
-        http.request(req)
-      }
+      client = Yao.default_client.pool['compute']
+      tenant_id = Yao::Tenant.get_by_name(Kakin::Configuration.tenant).id
+      res = client.get("./os-simple-tenant-usage?start=#{start_time}&end=#{end_time}") do |req|
+        req.headers["Accept"] = "application/json"
+      end
 
-      if res.code != "200"
+      if res.status != 200
         raise "usage data fatch is failed"
       else
         result = Hash.new
-        tenant_usages = JSON.load(res.body)["tenant_usages"]
+        tenant_usages = res.body["tenant_usages"]
         tenants = Yao::Tenant.list
 
         unless options[:t].empty?
