@@ -34,7 +34,7 @@ module Kakin
         tenant_name config['tenant']
         username config['username']
         password config['password']
-        timeout config['timeout'] if config['timeout']
+        timeout config['timeout'].to_i if config['timeout']
         client_cert config['client_cert'] if config['client_cert']
         client_key config['client_key'] if config['client_key']
         identity_api_version config['identity_api_version'] if config['identity_api_version']
