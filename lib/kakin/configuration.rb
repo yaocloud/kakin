@@ -10,19 +10,34 @@ module Kakin
     end
 
     def self.setup
-      yaml = YAML.load_file(File.expand_path('~/.kakin'))
+      config = {
+        'auth_url'       => ENV['OS_AUTH_URL'],
+        'tenant'         => ENV['OS_TENANT_NAME'] || ENV['OS_PROJECT_NAME'],
+        'username'       => ENV['OS_USERNAME'],
+        'password'       => ENV['OS_PASSWORD'],
+        'client_cert'    => ENV['OS_CERT'],
+        'client_key'     => ENV['OS_KEY'],
+        'timeout'        => ENV['YAO_TIMEOUT'],
+        'management_url' => ENV['YAO_MANAGEMENT_URL'],
+      }
 
-      @@_management_url = yaml['management_url']
-      @@_tenant = yaml['tenant']
+      file_path = File.expand_path('~/.kakin')
+      if File.exist?(file_path)
+        yaml = YAML.load_file(file_path)
+        config.merge!(yaml)
+      end
+
+      @@_management_url = config['management_url']
+      @@_tenant = config['tenant']
 
       Yao.configure do
-        auth_url yaml['auth_url']
-        tenant_name yaml['tenant']
-        username yaml['username']
-        password yaml['password']
-        timeout yaml['timeout'] if yaml['timeout']
-        client_cert yaml['client_cert'] if yaml['client_cert']
-        client_key yaml['client_key'] if yaml['client_key']
+        auth_url config['auth_url']
+        tenant_name config['tenant']
+        username config['username']
+        password config['password']
+        timeout config['timeout'] if config['timeout']
+        client_cert config['client_cert'] if config['client_cert']
+        client_key config['client_key'] if config['client_key']
       end
     end
   end
