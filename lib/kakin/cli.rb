@@ -3,6 +3,7 @@ require 'yaml'
 require 'json'
 require 'net/http'
 require 'yao'
+require 'kakin/yao_ext/yao'
 require 'kakin/yao_ext/tenant'
 require 'kakin/yao_ext/server'
 require 'kakin/yao_ext/floatingip'
@@ -27,7 +28,6 @@ module Kakin
       STDERR.puts "Start: #{start_time}"
       STDERR.puts "End:   #{end_time}"
       client = Yao.default_client.pool['compute']
-      tenant_id = Yao::Tenant.get_by_name(Kakin::Configuration.tenant).id
       res = client.get("./os-simple-tenant-usage?start=#{start_time}&end=#{end_time}") do |req|
         req.headers["Accept"] = "application/json"
       end
@@ -37,7 +37,7 @@ module Kakin
       else
         result = Hash.new
         tenant_usages = res.body["tenant_usages"]
-        tenants = Yao::Tenant.list
+        tenants = Yao.tenant_klass.list
 
         unless options[:t].empty?
           tenant = tenants.find { |tenant| tenant.name == options[:t] }
@@ -90,9 +90,9 @@ module Kakin
 
       result = Hash.new
       tenants = unless options[:t].empty?
-                  Yao::Tenant.list(name: options[:t])
+                  Yao.tenant_klass.list(name: options[:t])
                 else
-                  Yao::Tenant.list
+                  Yao.tenant_klass.list
                 end
       tenants = [tenants] unless tenants.is_a?(Array)
 
@@ -120,9 +120,9 @@ module Kakin
 
       result = Hash.new
       tenants = unless options[:t].empty?
-                  Yao::Tenant.list(name: options[:t])
+                  Yao.tenant_klass.list(name: options[:t])
                 else
-                  Yao::Tenant.list
+                  Yao.tenant_klass.list
                 end
       tenants = [tenants] unless tenants.is_a?(Array)
 
@@ -147,9 +147,9 @@ module Kakin
 
       result = Hash.new
       tenants = unless options[:t].empty?
-                  Yao::Tenant.list(name: options[:t])
+                  Yao.tenant_klass.list(name: options[:t])
                 else
-                  Yao::Tenant.list
+                  Yao.tenant_klass.list
                 end
       tenants = [tenants] unless tenants.is_a?(Array)
       volume_types = Yao::VolumeType.list
