@@ -28,7 +28,7 @@ module Kakin
       STDERR.puts "Start: #{start_time}"
       STDERR.puts "End:   #{end_time}"
       client = Yao.default_client.pool['compute']
-      tenant_id = get_tenant.id
+      tenant_id = Yao.tenant_klass.get(Kakin::Configuration.tenant)
       res = client.get("./os-simple-tenant-usage?start=#{start_time}&end=#{end_time}") do |req|
         req.headers["Accept"] = "application/json"
       end
@@ -38,7 +38,7 @@ module Kakin
       else
         result = Hash.new
         tenant_usages = res.body["tenant_usages"]
-        tenants = list_tenant
+        tenants = Yao.tenant_klass.list
 
         unless options[:t].empty?
           tenant = tenants.find { |tenant| tenant.name == options[:t] }
@@ -91,9 +91,9 @@ module Kakin
 
       result = Hash.new
       tenants = unless options[:t].empty?
-                  list_tenant(name: options[:t])
+                  Yao.tenant_klass.list(name: options[:t])
                 else
-                  list_tenant
+                  Yao.tenant_klass.list
                 end
       tenants = [tenants] unless tenants.is_a?(Array)
 
@@ -121,9 +121,9 @@ module Kakin
 
       result = Hash.new
       tenants = unless options[:t].empty?
-                  list_tenant(name: options[:t])
+                  Yao.tenant_klass.list(name: options[:t])
                 else
-                  list_tenant
+                  Yao.tenant_klass.list
                 end
       tenants = [tenants] unless tenants.is_a?(Array)
 
@@ -148,9 +148,9 @@ module Kakin
 
       result = Hash.new
       tenants = unless options[:t].empty?
-                  list_tenant(name: options[:t])
+                  Yao.tenant_klass.list(name: options[:t])
                 else
-                  list_tenant
+                  Yao.tenant_klass.list
                 end
       tenants = [tenants] unless tenants.is_a?(Array)
       volume_types = Yao::VolumeType.list
@@ -169,21 +169,5 @@ module Kakin
 
       puts YAML.dump(result)
     end
-  end
-end
-
-def get_tenant
-  if Yao.keystone_v2?
-    Yao::Tenant.get(Kakin::Configuration.tenant)
-  else
-    Yao::Project.get(Kakin::Configuration.tenant)
-  end
-end
-
-def list_tenant(query={})
-  if Yao.keystone_v2?
-    Yao::Tenant.list(query)
-  else
-    Yao::Project.list(query)
   end
 end
