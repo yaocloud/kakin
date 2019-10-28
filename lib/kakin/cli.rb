@@ -28,7 +28,6 @@ module Kakin
       STDERR.puts "Start: #{start_time}"
       STDERR.puts "End:   #{end_time}"
       client = Yao.default_client.pool['compute']
-      tenant_id = Yao.tenant_klass.get(Kakin::Configuration.tenant)
       res = client.get("./os-simple-tenant-usage?start=#{start_time}&end=#{end_time}") do |req|
         req.headers["Accept"] = "application/json"
       end
