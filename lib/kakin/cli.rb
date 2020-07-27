@@ -47,7 +47,9 @@ module Kakin
         end
 
         tenant_usages.each do |usage|
-          tenant = tenants.find { |tenant| tenant.id == usage["tenant_id"] }
+          tenant_id = usage["tenant_id"]
+          tenant = tenants.find { |tenant| tenant.id == tenant_id }
+          tenant_name = tenant&.name || tenant_id
 
           total_vcpus_usage     = usage["total_vcpus_usage"]
           total_memory_mb_usage = usage["total_memory_mb_usage"]
@@ -57,7 +59,7 @@ module Kakin
           bill_memory = total_memory_mb_usage * yaml["memory_mb_per_hour"]
           bill_disk   = total_local_gb_usage * yaml["disk_gb_per_hour"]
 
-          result[tenant.name] = {
+          result[tenant_name] = {
             'bill_total'            => bill_vcpu + bill_memory + bill_disk,
             'bill_vcpu'             => bill_vcpu,
             'bill_memory'           => bill_memory,
