@@ -19,7 +19,7 @@ Gem::Specification.new do |spec|
   spec.require_paths = ["lib"]
 
   spec.add_dependency 'thor'
-  spec.add_dependency 'yao'
+  spec.add_dependency 'yao', "=> 0.13.4"
 
   spec.add_development_dependency "bundler", "~> 2.0.1"
   spec.add_development_dependency "rake", ">= 12.3.3"

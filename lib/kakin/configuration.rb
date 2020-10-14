@@ -13,6 +13,7 @@ module Kakin
         'password'             => ENV['OS_PASSWORD'],
         'client_cert'          => ENV['OS_CERT'],
         'client_key'           => ENV['OS_KEY'],
+        'ca_cert'              => ENV['OS_CACERT'],
         'identity_api_version' => ENV['OS_IDENTITY_API_VERSION'],
         'user_domain_name'     => ENV['OS_USER_DOMAIN_NAME'],
         'project_domain_name'  => ENV['OS_PROJECT_DOMAIN_NAME'],
@@ -35,6 +36,7 @@ module Kakin
         username config['username']
         password config['password']
         timeout config['timeout'].to_i if config['timeout']
+        ca_cert config['ca_cert'] if config['ca_cert']
         client_cert config['client_cert'] if config['client_cert']
         client_key config['client_key'] if config['client_key']
         identity_api_version config['identity_api_version'] if config['identity_api_version']
