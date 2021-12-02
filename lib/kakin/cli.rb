@@ -6,7 +6,6 @@ require 'yao'
 require 'kakin/yao_ext/yao'
 require 'kakin/yao_ext/tenant'
 require 'kakin/yao_ext/server'
-require 'kakin/yao_ext/floatingip'
 require 'thor'
 
 module Kakin
@@ -130,7 +129,7 @@ module Kakin
 
       tenants.each do |tenant|
         count = tenant.ports.select {|p| p.fixed_ips[0]["ip_address"] =~ ip_regexp}.count
-        count += Yao::NetworkingFloatingIP.list(tenant_id: tenant.id).select {|p| p.floating_ip_address =~ ip_regexp}.count
+        count += Yao::FloatingIP.list(tenant_id: tenant.id).select {|p| p.floating_ip_address =~ ip_regexp}.count
         result[tenant.name] = {
           'count'       => count,
           'total_usage' => count * yaml["cost_per_ip"],
