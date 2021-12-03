@@ -15,7 +15,8 @@ module Kakin
     option :f, type: :string, banner: "<file>", desc: "cost define file(yaml)", required: true
     option :s, type: :string, banner: "<start>", desc: "start time", default: (DateTime.now << 1).strftime("%Y-%m-01")
     option :e, type: :string, banner: "<end>", desc: "end time", default: Time.now.strftime("%Y-%m-01")
-    option :t, type: :string, banner: "<tenant>", desc: "specify tenant", default: ""
+    option :t, type: :array, banner: "<tenant>", desc: "specify tenants"
+    option :S, type: :array, banner: "<tenant>", desc: "skip tenants", default: []
     desc 'calc', 'Calculate the cost'
     def calc
       Kakin::Configuration.setup
@@ -23,55 +24,47 @@ module Kakin
       yaml = YAML.load_file(options[:f])
       start_time = Time.parse(options[:s]).strftime("%FT%T")
       end_time = Time.parse(options[:e]).strftime("%FT%T")
+      skip = options[:S]
+      tenants = if tenants = options[:t]
+        tenants.map do |tenant|
+          Yao.tenant_klass.get(tenant)
+        end
+      else
+        Yao.tenant_klass.list
+      end.select do |tenant|
+        name = tenant.name || tenant.id
+        !skip.include?(name)
+      end
 
       STDERR.puts "Start: #{start_time}"
       STDERR.puts "End:   #{end_time}"
-      client = Yao.default_client.pool['compute']
-      res = client.get("./os-simple-tenant-usage?start=#{start_time}&end=#{end_time}") do |req|
-        req.headers["Accept"] = "application/json"
+
+      result = tenants.each_with_object({}) do |tenant, result|
+        usage = tenant.server_usage(start: start_time, end: end_time)
+        next if usage.empty?
+
+        total_vcpus_usage     = usage["total_vcpus_usage"]
+        total_memory_mb_usage = usage["total_memory_mb_usage"]
+        total_local_gb_usage  = usage["total_local_gb_usage"]
+
+        bill_vcpu   = total_vcpus_usage * yaml["vcpu_per_hour"]
+        bill_memory = total_memory_mb_usage * yaml["memory_mb_per_hour"]
+        bill_disk   = total_local_gb_usage * yaml["disk_gb_per_hour"]
+
+        name = tenant.name || tenant.id
+        result[name] = {
+          'bill_total'            => bill_vcpu + bill_memory + bill_disk,
+          'bill_vcpu'             => bill_vcpu,
+          'bill_memory'           => bill_memory,
+          'bill_disk'             => bill_disk,
+          'total_hours'           => usage["total_hours"],
+          'total_vcpus_usage'     => total_vcpus_usage,
+          'total_memory_mb_usage' => total_memory_mb_usage,
+          'total_local_gb_usage'  => total_local_gb_usage,
+        }
       end
 
-      if res.status != 200
-        raise "usage data fatch is failed"
-      else
-        result = Hash.new
-        tenant_usages = res.body["tenant_usages"]
-        tenants = Yao.tenant_klass.list
-
-        unless options[:t].empty?
-          tenant = tenants.find { |tenant| tenant.name == options[:t] }
-          raise "Not Found tenant #{options[:t]}" unless tenant
-
-          tenant_usages = tenant_usages.select { |tenant_usage| tenant_usage["tenant_id"] == tenant.id }
-        end
-
-        tenant_usages.each do |usage|
-          tenant_id = usage["tenant_id"]
-          tenant = tenants.find { |tenant| tenant.id == tenant_id }
-          tenant_name = tenant&.name || tenant_id
-
-          total_vcpus_usage     = usage["total_vcpus_usage"]
-          total_memory_mb_usage = usage["total_memory_mb_usage"]
-          total_local_gb_usage  = usage["total_local_gb_usage"]
-
-          bill_vcpu   = total_vcpus_usage * yaml["vcpu_per_hour"]
-          bill_memory = total_memory_mb_usage * yaml["memory_mb_per_hour"]
-          bill_disk   = total_local_gb_usage * yaml["disk_gb_per_hour"]
-
-          result[tenant_name] = {
-            'bill_total'            => bill_vcpu + bill_memory + bill_disk,
-            'bill_vcpu'             => bill_vcpu,
-            'bill_memory'           => bill_memory,
-            'bill_disk'             => bill_disk,
-            'total_hours'           => usage["total_hours"],
-            'total_vcpus_usage'     => total_vcpus_usage,
-            'total_memory_mb_usage' => total_memory_mb_usage,
-            'total_local_gb_usage'  => total_local_gb_usage,
-          }
-        end
-
-        puts YAML.dump(result)
-      end
+      puts YAML.dump(result)
     end
 
     option :f, type: :string, banner: "<file>", desc: "cost define file(yaml)", required: true
